@@ -1,0 +1,19 @@
+{
+  "extends": "@tsconfig/strictest/tsconfig",
+  "include": ["./**/*"],
+  "exclude": ["dist"],
+  "compilerOptions": {
+    "baseUrl": "./",
+    "declaration": true,
+    "lib": ["es2023"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "target": "es2022"
+  }
+}
