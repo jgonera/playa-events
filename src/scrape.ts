@@ -1,3 +1,4 @@
+import { writeFile } from "node:fs/promises";
 import * as cheerio from "cheerio";
 import { addDays, parse } from "date-fns";
 import pMap from "p-map";
@@ -68,6 +69,8 @@ interface EventDetails {
 }
 
 async function getEventDetails(url: string): Promise<EventDetails> {
+  console.log(`Getting details for ${url}...`);
+
   const response = await fetch(url);
   const body = await response.text();
   const $ = cheerio.load(body);
@@ -111,14 +114,14 @@ async function run() {
     (await pMap(URLS, getEventUrls, { concurrency: CONCURRENCY })).flat(),
   );
 
-  console.error(`Found ${eventUrls.size} event URLs`);
+  console.log(`Found ${eventUrls.size} event URLs`);
 
   const data = await pMap(eventUrls, getEventDetails, {
     concurrency: CONCURRENCY,
   });
 
-  console.log(JSON.stringify(data, null, 2));
-  console.error(`Got ${data.length} events.`);
+  await writeFile("./data.json", JSON.stringify(data, null, 2));
+  console.log("Events saved in data.json");
 }
 
 async function test() {
