@@ -2,7 +2,9 @@ import { writeFile } from "node:fs/promises";
 import * as cheerio from "cheerio";
 import { addDays, parse } from "date-fns";
 import pMap from "p-map";
+import { basename } from "node:path";
 
+const JSON_FILE = "src/data.json";
 const CONCURRENCY = 10;
 const DATETIME_FORMATS = ["MMMM do, yyyy, h a", "MMMM do, yyyy, h:mm a"];
 const TIME_FORMATS = ["h a", "h:mm a"];
@@ -19,7 +21,7 @@ const URLS = [
   "https://playaevents.burningman.org/2023/playa_events/09/",
 ];
 
-function parseDate(dateString: string): [Date, Date] {
+function parseDate(dateString: string): { start: Date; end: Date } {
   const [startString, endString] = dateString
     .replace(/[\t\n]/g, "")
     .split("–")
@@ -38,10 +40,10 @@ function parseDate(dateString: string): [Date, Date] {
     throw new Error(`Wrong date format: ${dateString}`);
   }
 
-  const startDate = parse(startString, startFormat, NOW);
-  const endDate = parse(endString, endFormat, startDate);
+  const start = parse(startString, startFormat, NOW);
+  const end = parse(endString, endFormat, start);
 
-  return [startDate, endDate > startDate ? endDate : addDays(endDate, 1)];
+  return { start, end: end > start ? end : addDays(end, 1) };
 }
 
 async function getEventUrls(url: string): Promise<string[]> {
@@ -57,8 +59,9 @@ async function getEventUrls(url: string): Promise<string[]> {
 }
 
 interface EventDetails {
+  id: string;
   name: string;
-  dates: [Date, Date][];
+  dates: { start: Date; end: Date }[];
   type: string;
   camp: string;
   campUrl: string | undefined;
@@ -78,6 +81,7 @@ async function getEventDetails(url: string): Promise<EventDetails> {
   const datesEl = whitepage.find('.row div:contains("Dates and Times:") + div');
 
   const details = {
+    id: basename(url),
     name: whitepage.find("h2").text().trim(),
     dates: (datesEl.length > 0
       ? (datesEl.html() ?? "").split("<br>").slice(0, -1)
@@ -120,8 +124,8 @@ async function run() {
     concurrency: CONCURRENCY,
   });
 
-  await writeFile("./data.json", JSON.stringify(data, null, 2));
-  console.log("Events saved in data.json");
+  await writeFile(JSON_FILE, JSON.stringify(data, null, 2));
+  console.log(`Events saved in ${JSON_FILE}`);
 }
 
 async function test() {

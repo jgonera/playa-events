@@ -7,6 +7,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc --project tsconfig.build.json && tsc-alias --resolve-full-paths --project tsconfig.build.json",
     "scrape": "npm run build && node dist/scrape.js",
+    "csv": "npm run build && node dist/csv.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
